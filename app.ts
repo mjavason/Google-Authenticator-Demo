@@ -49,6 +49,23 @@ app.get('/generate', (req: Request, res: Response) => {
   });
 });
 
+app.post('/verify', (req: Request, res: Response) => {
+  const { token, secret } = req.body;
+
+  const verified = speakeasy.totp.verify({
+    secret: secret, // The user's saved secret (should be retrieved securely from DB)
+    encoding: 'base32',
+    token: token, // The token the user provides
+  });
+
+  if (verified) {
+    return res.json({ verified: true });
+  } else {
+    return res.json({ verified: false });
+  }
+});
+
+
 //#endregion Code here
 
 //#region Server Setup
