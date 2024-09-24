@@ -5,6 +5,8 @@ import axios from 'axios';
 import dotenv from 'dotenv';
 import morgan from 'morgan';
 import { setupSwagger } from './swagger.config';
+import speakeasy from 'speakeasy';
+import qrcode from 'qrcode';
 
 //#region App Setup
 const app = express();
@@ -22,8 +24,32 @@ setupSwagger(app, BASE_URL);
 //#endregion App Setup
 
 //#region Code here
-console.log('Hello world');
-//#endregion
+
+app.get('/generate', (req: Request, res: Response) => {
+  const secret = speakeasy.generateSecret({
+    name: 'Mykan Google Authenticator Demo',
+  });
+
+  console.log('Generated secret:', secret); // Log for debugging
+
+  // Check if `otpauth_url` exists
+  if (!secret.otpauth_url) {
+    return res.status(500).json({ message: 'Error generating OTPAuth URL' });
+  }
+
+  // Generate a QR code to scan
+  qrcode.toDataURL(secret.otpauth_url, (err, data) => {
+    if (err) {
+      return res.status(500).json({ message: 'Error generating QR code' });
+    }
+    res.json({
+      secret: secret.base32, // Save this secret to the user's profile
+      qrCode: data, // Provide this QR code to the user
+    });
+  });
+});
+
+//#endregion Code here
 
 //#region Server Setup
 
